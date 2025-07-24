@@ -10,8 +10,8 @@ import mongoose from 'mongoose';
 
 import authRoutes from './routes/auth.js';
 import paymentRoutes from './routes/payment.js';
-import adminRoutes from './routes/admin.js';       // Адмінські маршрути
-import supportRoutes from './routes/support.js';   // Підтримка (чат)
+import adminRoutes from './routes/admin.js';
+import supportRoutes from './routes/support.js';
 import userRoutes from './routes/user.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,33 +19,51 @@ const __dirname  = path.dirname(__filename);
 
 const app = express();
 
-// ===== Налаштування CORS =====
-// Дозволяємо доступ з фронтенд адрес
+// ====== CORS: додано Netlify та Render ======
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  'http://localhost:5184',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:5175',
+  'http://127.0.0.1:5176',
+  'http://127.0.0.1:5184',
+  'https://magictime.netlify.app',      // <-- твій продакшн фронт
+  'https://magictime.onrender.com',     // <-- якщо треба тестувати прямо з бекенда Render
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:5174',
-    'http://localhost:5184',
-  ],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS not allowed from this origin: ' + origin), false);
+  },
   credentials: true,
 }));
 
-// 1) JSON‑парсер для роботи з JSON в тілі запитів
-// 2) Сервінг статичних файлів фронтенду (збудованого)
+// JSON body parser
 app.use(express.json());
+
+// Статичні файли фронту (vite build → dist)
 app.use(
   express.static(
     path.resolve(__dirname, '../frontend/dist')
   )
 );
 
-// 3) Підключення API‑маршрутів
+// API маршрути
 app.use('/api/auth',    authRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/admin',   adminRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/user',    userRoutes);
 
-// 4) Демонстраційний тестовий ендпоінт — можна видалити
+// Демонстраційний ендпоінт
 app.get('/api/myteam', (req, res) => {
   res.json({
     id: "123456",
@@ -88,15 +106,14 @@ app.get('/api/myteam', (req, res) => {
   });
 });
 
-// 5) SPA fallback — усі запити, які не співпадають з API,
-//     повертають фронтенд додаток (index.html)
+// SPA fallback
 app.get('*', (_req, res) => {
   res.sendFile(
     path.resolve(__dirname, '../frontend/dist/index.html')
   );
 });
 
-// 6) Підключення до MongoDB та запуск серверу
+// MongoDB connect + запуск сервера
 const PORT = process.env.PORT || 3001;
 mongoose
   .connect(process.env.MONGO_URI)
@@ -105,7 +122,6 @@ mongoose
     const server = app.listen(PORT, () =>
       console.log(`🚀 Server running on http://localhost:${PORT}`)
     );
-    // Обробка помилки порту, якщо він зайнятий
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
         console.error(`❌ Port ${PORT} already in use. Please free the port or use a different one.`);

@@ -8,16 +8,16 @@ export default function Register() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  // Додаємо поле promo до форми
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
-    promo: ''      // тут зберігаємо промокод запрошувача
+    promo: '', // промокод запрошувача
   });
+
   const [error, setError] = useState('');
 
-  // Автозаповнення promo з query-рядка (?ref=nickname)
+  // Автоматично підставляємо промокод з URL (наприклад ?ref=nickname)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref');
@@ -26,26 +26,33 @@ export default function Register() {
     }
   }, []);
 
+  // Оновлення полів форми
   const handleChange = e => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Обробка відправлення форми
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
+
     try {
-      // Регістрація з промокодом
+      // Відправка даних на бекенд для реєстрації
       await api.post('/auth/register', form);
 
-      // Одразу логін після успішної реєстрації
+      // Автоматичний вхід після успішної реєстрації
       const { data } = await api.post('/auth/login', {
         email: form.email,
-        password: form.password
+        password: form.password,
       });
 
+      // Збереження даних про користувача (токен)
       login(data);
+
+      // Перехід до захищеної сторінки
       navigate('/dashboard', { replace: true });
     } catch (err) {
+      // Вивід помилки, яку повернув сервер
       setError(err.response?.data?.message || 'Помилка реєстрації');
     }
   };
@@ -93,7 +100,6 @@ export default function Register() {
           required
         />
 
-        {/* Поле промокоду */}
         <input
           name="promo"
           value={form.promo}
