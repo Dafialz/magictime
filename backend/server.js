@@ -19,7 +19,7 @@ const __dirname  = path.dirname(__filename);
 
 const app = express();
 
-// ====== CORS: додано Netlify, Render та Vercel ======
+// ====== CORS: ======
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
@@ -31,23 +31,40 @@ const allowedOrigins = [
   'http://127.0.0.1:5175',
   'http://127.0.0.1:5176',
   'http://127.0.0.1:5184',
-  'https://magictime.netlify.app',       // Netlify продакшн
-  'https://magictime-xi.vercel.app',     // Vercel продакшн
-  'https://magictime.onrender.com',      // Render (якщо треба)
+  'https://magictime.netlify.app',
+  'https://magictime-xi.vercel.app',
+  'https://magictime.vercel.app',
+  'https://magictime.onrender.com',
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('CORS not allowed from this origin: ' + origin), false);
-  },
-  credentials: true,
-}));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    console.log(`🟢 [CORS] Allow: ${origin}`);
+  } else if (origin) {
+    console.warn(`🔴 [CORS] Blocked: ${origin}`);
+  }
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
-// JSON body parser
+// Або як middleware (замість попереднього блоку можна використати цей, але обидва не треба!)
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (!origin) return callback(null, true);
+//     if (allowedOrigins.includes(origin)) return callback(null, true);
+//     return callback(new Error('CORS not allowed from this origin: ' + origin), false);
+//   },
+//   credentials: true,
+// }));
+
 app.use(express.json());
 
 // Статичні файли фронту (vite build → dist)
@@ -73,36 +90,12 @@ app.get('/api/myteam', (req, res) => {
     avatar: "https://ui-avatars.com/api/?name=Roman+Ivanov",
     referralLink: "https://magictime.com/ref/123456",
     team: [
-      {
-        id: "234567",
-        name: "User 1",
-        investment: 700,
-        color: "#53A9FA",
-      },
-      {
-        id: "345678",
-        name: "User 2",
-        color: "#8E8FFA",
-        children: [
-          {
-            id: "456780",
-            name: "User 4",
-            status: "Inactive",
-            joinDate: "01 Apr, 2024",
-            color: "#F7A334",
-          },
-          {
-            id: "678901",
-            name: "User 5",
-            color: "#53A9FA",
-          }
-        ]
-      },
-      {
-        id: "456789",
-        name: "User 3",
-        color: "#36CFCB",
-      }
+      { id: "234567", name: "User 1", investment: 700, color: "#53A9FA" },
+      { id: "345678", name: "User 2", color: "#8E8FFA", children: [
+        { id: "456780", name: "User 4", status: "Inactive", joinDate: "01 Apr, 2024", color: "#F7A334" },
+        { id: "678901", name: "User 5", color: "#53A9FA" }
+      ] },
+      { id: "456789", name: "User 3", color: "#36CFCB" }
     ]
   });
 });
