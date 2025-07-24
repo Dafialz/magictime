@@ -9,9 +9,12 @@ export default function Network() {
 
   useEffect(() => {
     axios
-      .get("/api/myteam")
+      .get("https://magictime.onrender.com/api/myteam")
       .then((res) => setUser(res.data))
-      .catch(() => setUser(null));
+      .catch((err) => {
+        console.error("API error:", err);
+        setUser(null);
+      });
   }, []);
 
   if (!user) return <div>Loading...</div>;
