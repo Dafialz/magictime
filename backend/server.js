@@ -1,8 +1,3 @@
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} | Origin: ${req.headers.origin} | Auth: ${req.headers.authorization}`);
-  next();
-});
-
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 require('dotenv').config();
@@ -24,7 +19,13 @@ const __dirname  = path.dirname(__filename);
 
 const app = express();
 
-// ====== CORS: ======
+// === ЛОГИ ВСІХ ЗАПИТІВ ===
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} | Origin: ${req.headers.origin} | Auth: ${req.headers.authorization}`);
+  next();
+});
+
+// ====== CORS ======
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
@@ -53,23 +54,13 @@ app.use((req, res, next) => {
   } else if (origin) {
     console.warn(`🔴 [CORS] Blocked: ${origin}`);
   }
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);
   }
   next();
 });
 
-// Або як middleware (замість попереднього блоку можна використати цей, але обидва не треба!)
-// app.use(cors({
-//   origin: (origin, callback) => {
-//     if (!origin) return callback(null, true);
-//     if (allowedOrigins.includes(origin)) return callback(null, true);
-//     return callback(new Error('CORS not allowed from this origin: ' + origin), false);
-//   },
-//   credentials: true,
-// }));
-
+// Далі основні middleware
 app.use(express.json());
 
 // Статичні файли фронту (vite build → dist)
