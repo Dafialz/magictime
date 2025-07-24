@@ -1,58 +1,45 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
+import api from '../api/axios'; // Використовуємо твій api з інтерсептором
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [loading, setLoading] = useState(true);
 
-  const login = (data) => {
-    setUser(data.user);
-    setToken(data.token);
+  // login: зберігає токен, підтягує профіль
+  const login = async (data) => {
     localStorage.setItem('token', data.token);
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken('');
-    localStorage.removeItem('token');
-  };
-
-  useEffect(() => {
-    if (token) {
-      fetchProfile();
-    } else {
-      setLoading(false);
-      setUser(null);
-    }
-  }, [token]);
-
-  const fetchProfile = async () => {
-    setLoading(true);
     try {
-      const res = await fetch('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data);
-      } else {
-        logout();
-      }
-    } catch (err) {
-      console.error('Fetch profile error:', err);
+      const res = await api.get('/auth/me');
+      setUser(res.data);
+    } catch {
       logout();
-    } finally {
-      setLoading(false);
     }
   };
+
+  // logout: очищає все
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  // автоматичне підтягування профілю, якщо токен є
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    api.get('/auth/me')
+      .then(res => setUser(res.data))
+      .catch(logout)
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,3 +1,8 @@
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} | Origin: ${req.headers.origin} | Auth: ${req.headers.authorization}`);
+  next();
+});
+
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 require('dotenv').config();
