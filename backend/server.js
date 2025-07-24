@@ -19,7 +19,7 @@ const __dirname  = path.dirname(__filename);
 
 const app = express();
 
-// ====== CORS: додано Netlify та Render ======
+// ====== CORS: додано Netlify, Render та Vercel ======
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
@@ -31,8 +31,9 @@ const allowedOrigins = [
   'http://127.0.0.1:5175',
   'http://127.0.0.1:5176',
   'http://127.0.0.1:5184',
-  'https://magictime.netlify.app',      // <-- твій продакшн фронт
-  'https://magictime.onrender.com',     // <-- якщо треба тестувати прямо з бекенда Render
+  'https://magictime.netlify.app',       // продакшн фронт Netlify
+  'https://magictime-xi.vercel.app',     // !!! додано твій фронт на Vercel
+  'https://magictime.onrender.com',      // бекенд Render (якщо треба тестувати з нього)
 ];
 
 app.use(cors({
