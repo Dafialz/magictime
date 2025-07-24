@@ -37,6 +37,15 @@ export default function Navbar() {
             Home
           </NavLink>
         </li>
+        {/* --- Додаємо Тарифи --- */}
+        <li>
+          <NavLink
+            to="/tariffs"
+            className={({ isActive }) => isActive ? active + " font-bold" : inactive}
+          >
+            Тарифи
+          </NavLink>
+        </li>
 
         {user && (
           <>

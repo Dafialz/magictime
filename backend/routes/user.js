@@ -23,6 +23,16 @@ async function buildTree(userId, level = 0) {
   return children;
 }
 
+// === ПІНГ ЮЗЕРА для online-статусу ===
+router.post('/ping', auth, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.userId, { lastActive: new Date() });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Запит свого дерева
 router.get('/my-tree', auth, async (req, res) => {
   try {

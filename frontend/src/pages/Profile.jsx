@@ -1,10 +1,22 @@
 // src/pages/Profile.jsx
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';  // Контекст для отримання даних користувача
+import api from "../api/axios"; // Додаємо імпорт API
 import '../styles/profile.css';  // Підключаємо стилі для цього компонента
 
 export default function Profile() {
   const { user, logout, loading } = useContext(AuthContext);  // Отримуємо інформацію про користувача з контексту
+
+  // === Авто-пінг для онлайн-статусу ===
+  useEffect(() => {
+    if (!user) return; // не робити нічого, якщо не авторизований
+
+    const ping = () => api.post("/user/ping").catch(() => {});
+    ping(); // одразу при завантаженні
+    const interval = setInterval(ping, 10000); // кожні 10 секунд
+
+    return () => clearInterval(interval); // очищення при виході з профілю
+  }, [user]);
 
   if (loading) return <div>Loading user...</div>;  // Показуємо повідомлення, поки дані користувача завантажуються
   if (!user) return <div>Not authorized. Go to login!</div>;  // Якщо користувач не авторизований, перенаправляємо на вхід

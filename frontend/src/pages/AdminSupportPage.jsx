@@ -1,26 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import api from "../api/axios";
 
 export default function AdminSupportPage() {
-  const [chats, setChats] = useState([]);             // всі чати (юзери)
-  const [selectedUser, setSelectedUser] = useState(null); // вибраний юзер
-  const [messages, setMessages] = useState([]);       // повідомлення
+  const [chats, setChats] = useState([]);             
+  const [selectedUser, setSelectedUser] = useState(null); 
+  const [messages, setMessages] = useState([]);       
   const [text, setText] = useState("");
-  const [search, setSearch] = useState("");           // рядок пошуку
+  const [search, setSearch] = useState("");           
 
-  // 1. Завантажити всі чати користувачів
+  // Авто-скрол вниз
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // Завантажити всі чати користувачів
   useEffect(() => {
     api.get("/support/chats").then(res => setChats(res.data));
   }, []);
 
-  // 2. Коли вибрали юзера — завантажити історію чату
+  // Коли вибрали юзера — завантажити історію чату
   useEffect(() => {
     if (selectedUser) {
       api.get(`/support/${selectedUser._id}`).then(res => setMessages(res.data));
     }
   }, [selectedUser]);
 
-  // 3. Відправити відповідь
+  // Автоматичне оновлення чату кожні 3 секунди
+  useEffect(() => {
+    if (!selectedUser) return;
+    const updateMessages = () => {
+      api.get(`/support/${selectedUser._id}`).then(res => setMessages(res.data));
+    };
+    const interval = setInterval(updateMessages, 3000);
+    updateMessages();
+    return () => clearInterval(interval);
+  }, [selectedUser]);
+
+  // Відправити відповідь
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!text.trim()) return;
@@ -29,11 +49,24 @@ export default function AdminSupportPage() {
     setText('');
   };
 
-  // 4. Фільтрований список юзерів за пошуком (по name або email)
+  // Фільтрований список юзерів за пошуком
   const filteredChats = chats.filter(user =>
     (user.name && user.name.toLowerCase().includes(search.toLowerCase())) ||
     (user.email && user.email.toLowerCase().includes(search.toLowerCase()))
   );
+
+  // Формування статусу (online/offline/невідомий)
+  function getUserStatus(user) {
+    if (user.lastActive) {
+      const last = new Date(user.lastActive);
+      const now = new Date();
+      const diffSec = (now - last) / 1000;
+      if (diffSec < 60) return <span className="text-green-600 font-bold">● online</span>;
+      if (diffSec < 600) return <span className="text-gray-500">був(ла) онлайн {Math.floor(diffSec / 60)} хв тому</span>;
+      return <span className="text-gray-400">офлайн</span>;
+    }
+    return <span className="text-gray-400">статус невідомий</span>;
+  }
 
   return (
     <div className="flex max-w-5xl mx-auto mt-10 shadow rounded bg-white h-[600px]">
@@ -56,6 +89,8 @@ export default function AdminSupportPage() {
           >
             <b>{user.name || user.email}</b>
             <div className="text-xs text-gray-500">{user.email}</div>
+            {/* Online/offline/невідомий статус */}
+            <div className="text-xs mt-1">{getUserStatus(user)}</div>
           </div>
         ))}
       </div>
@@ -74,6 +109,8 @@ export default function AdminSupportPage() {
                   </div>
                 </div>
               ))}
+              {/* Авто-скрол до низу */}
+              <div ref={messagesEndRef} />
             </div>
             <form onSubmit={sendMessage} className="flex gap-2">
               <input

@@ -20,7 +20,9 @@ import AdminRoute       from './components/AdminRoute';
 import SupportChatPage  from './pages/SupportChatPage';
 import AdminSupportPage from './pages/AdminSupportPage';
 
-// Додано маршрут для тесту змінних середовища (можеш видалити після перевірки)
+import PackagesBlock from './components/PackagesBlock';
+
+// Для тесту змінних середовища (можеш видалити пізніше)
 const TestApiUrl = () => (
   <div>
     <h2>Test VITE_API_URL:</h2>
@@ -42,6 +44,9 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login"    element={<Login />}    />
           <Route path="/support"  element={<SupportChatPage />} />
+
+          {/* Відкрита сторінка тарифів */}
+          <Route path="/tariffs" element={<PackagesBlock />} />
 
           {/* Сторінка для тесту змінних (видалити після перевірки) */}
           <Route path="/api-url-test" element={<TestApiUrl />} />
