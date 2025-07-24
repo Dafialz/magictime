@@ -31,9 +31,9 @@ const allowedOrigins = [
   'http://127.0.0.1:5175',
   'http://127.0.0.1:5176',
   'http://127.0.0.1:5184',
-  'https://magictime.netlify.app',       // продакшн фронт Netlify
-  'https://magictime-xi.vercel.app',     // !!! додано твій фронт на Vercel
-  'https://magictime.onrender.com',      // бекенд Render (якщо треба тестувати з нього)
+  'https://magictime.netlify.app',       // Netlify продакшн
+  'https://magictime-xi.vercel.app',     // Vercel продакшн
+  'https://magictime.onrender.com',      // Render (якщо треба)
 ];
 
 app.use(cors({
