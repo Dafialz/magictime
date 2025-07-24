@@ -18,7 +18,15 @@ import Network          from './pages/Network';
 import AdminPackages    from './pages/AdminPackages';
 import AdminRoute       from './components/AdminRoute';
 import SupportChatPage  from './pages/SupportChatPage';
-import AdminSupportPage from './pages/AdminSupportPage'; // <--- ДОДАНО!
+import AdminSupportPage from './pages/AdminSupportPage';
+
+// Додано маршрут для тесту змінних середовища (можеш видалити після перевірки)
+const TestApiUrl = () => (
+  <div>
+    <h2>Test VITE_API_URL:</h2>
+    <code>{import.meta.env.VITE_API_URL || "Не визначено!"}</code>
+  </div>
+);
 
 export default function App() {
   return (
@@ -35,6 +43,9 @@ export default function App() {
           <Route path="/login"    element={<Login />}    />
           <Route path="/support"  element={<SupportChatPage />} />
 
+          {/* Сторінка для тесту змінних (видалити після перевірки) */}
+          <Route path="/api-url-test" element={<TestApiUrl />} />
+
           {/* Приватні маршрути */}
           <Route element={<PrivateRoute />}>
             <Route path="/profile"   element={<Profile />} />
@@ -45,8 +56,8 @@ export default function App() {
           {/* --- Адмінські маршрути --- */}
           <Route element={<AdminRoute />}>
             <Route path="/admin/packages" element={<AdminPackages />} />
-            <Route path="/admin/support"  element={<AdminSupportPage />} /> {/* <- ДОДАНО */}
-            {/* Можеш додавати ще адмін-сторінки тут */}
+            <Route path="/admin/support"  element={<AdminSupportPage />} />
+            {/* Додавай ще адмін-сторінки тут */}
           </Route>
           {/* --- / --- */}
 
