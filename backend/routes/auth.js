@@ -33,13 +33,20 @@ router.post(
 
       // Знайти реферера за промокодом (якщо він переданий)
       let invitedBy = null;
-      if (promo) {
-        // promo = нік (name) того, хто запросив
-        const inviter = await User.findOne({ promo: promo });
-        if (!inviter) {
+
+      // В першу чергу пробуємо взяти referrerLogin із сесії
+      if (req.session && req.session.referrerLogin) {
+        const inviterBySession = await User.findOne({ username: req.session.referrerLogin });
+        if (inviterBySession) {
+          invitedBy = inviterBySession.username;
+        }
+      } else if (promo) {
+        // promo = промокод, пошук за ним
+        const inviterByPromo = await User.findOne({ promo: promo });
+        if (!inviterByPromo) {
           return res.status(400).json({ message: 'Некоректний промокод' });
         }
-        invitedBy = inviter._id;
+        invitedBy = inviterByPromo.username;
       }
 
       // Хешуємо пароль
@@ -47,11 +54,11 @@ router.post(
 
       // Створюємо нового користувача, зберігаючи поле invitedBy і свій promo = name
       const user = new User({
-        name,
+        username: name,   // Якщо в тебе username - це name, інакше зміни
         email,
-        password: hash,
-        invitedBy,      // ObjectId користувача, що запросив, або null
-        promo: name     // робимо власний промокод рівним ніку
+        passwordHash: hash,
+        invitedBy,        // тут логін того, хто запросив
+        promo: name       // робимо власний промокод рівним ніку
       });
       await user.save();
 
@@ -67,7 +74,7 @@ router.post(
         token,
         user: {
           id:    user._id,
-          name:  user.name,
+          name:  user.username,
           email: user.email,
           role:  user.role
         }
@@ -98,7 +105,7 @@ router.post(
       if (!user) {
         return res.status(400).json({ message: 'Користувача не знайдено' });
       }
-      const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await bcrypt.compare(password, user.passwordHash);
       if (!isMatch) {
         return res.status(400).json({ message: 'Невірний пароль' });
       }
@@ -113,7 +120,7 @@ router.post(
         token,
         user: {
           id:    user._id,
-          name:  user.name,
+          name:  user.username,
           email: user.email,
           role:  user.role
         }
@@ -131,13 +138,13 @@ router.get(
   authMiddleware,
   async (req, res) => {
     try {
-      const user = await User.findById(req.userId).select('-password');
+      const user = await User.findById(req.userId).select('-passwordHash');
       if (!user) {
         return res.status(404).json({ message: 'Користувача не знайдено' });
       }
       res.json({
         id:    user._id,
-        name:  user.name,
+        name:  user.username,
         email: user.email,
         role:  user.role
       });

@@ -7,6 +7,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
+import session from 'express-session';    // додано
 
 import authRoutes from './routes/auth.js';
 import paymentRoutes from './routes/payment.js';
@@ -60,10 +61,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Далі основні middleware
+// Підключення сесій (додано)
+app.use(session({
+  secret: 'тут_твій_секретний_рядок',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 1 день
+}));
+
+// Основні middleware
 app.use(express.json());
 
-// Статичні файли фронту (vite build → dist)
+// Статичні файли фронтенду
 app.use(
   express.static(
     path.resolve(__dirname, '../frontend/dist')
@@ -77,7 +86,7 @@ app.use('/api/admin',   adminRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/user',    userRoutes);
 
-// Демонстраційний ендпоінт
+// Демонстраційний ендпоінт (можеш видалити)
 app.get('/api/myteam', (req, res) => {
   res.json({
     id: "123456",
